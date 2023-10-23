@@ -71,7 +71,39 @@ public class DivByZeroTransfer extends CFTransfer {
             Comparison operator,
             AnnotationMirror lhs,
             AnnotationMirror rhs) {
-        // TODO
+
+
+        if(operator.equals(Comparison.EQ))
+        {
+            // Return as is
+            return rhs;
+        }
+
+        if(operator.equals(Comparison.NE))
+        {
+            // is rhs a part of Top but not NZero (therefore zero)? If so, lhs must be "not zero"
+            if(equal(rhs, reflect(Top.class)) && !equal(rhs, reflect(NZero.class)))
+            {
+                return glb(lhs, reflect(NZero.class));
+            }
+        }
+
+        if(operator.equals(Comparison.LT) || operator.equals(Comparison.GT))
+        {
+            if(equal(rhs, reflect(Top.class)) && !equal(rhs, reflect(NZero.class)))
+            {
+                return reflect(NZero.class);
+            }
+        }
+
+        if(operator.equals(Comparison.LE) || operator.equals(Comparison.GE))
+        {
+            if(equal(rhs, reflect(NZero.class)))
+            {
+                return glb(reflect(NZero.class), lhs);
+            }
+        }
+
         return lhs;
     }
 
@@ -93,8 +125,35 @@ public class DivByZeroTransfer extends CFTransfer {
             BinaryOperator operator,
             AnnotationMirror lhs,
             AnnotationMirror rhs) {
-        // TODO
-        return top();
+
+        if(equal(lhs, reflect(Top.class)) && equal(rhs, reflect(Top.class)))
+        {
+            return reflect(Top.class);
+        }
+
+        // x/y and x%y involve similar operations, so club them together
+        if(operator.equals(BinaryOperator.DIVIDE) || operator.equals(BinaryOperator.MOD) || operator.equals(BinaryOperator.TIMES))
+        {
+            // the transfer function for a lattice with just Top and NZ is a 2x2 matrix
+            // with NZ being the output only when N/D both are NZ. Otherwise it is always "Top"
+            if(equal(lhs, reflect(NZero.class)) && equal(rhs, reflect(NZero.class)))
+            {
+                return reflect(NZero.class);
+            }
+        }
+        // x+y and x-y are the "same" if you think of x-y as x + (-y)
+        // note that integers can be negative. I feel like if I could do a >0 <0 check I could possibly refine this a lot
+        if(operator.equals(BinaryOperator.PLUS) || operator.equals(BinaryOperator.MINUS))
+        {
+
+            if( (!equal(lhs, reflect(NZero.class)) && equal(rhs, reflect(NZero.class)))
+                ||(equal(lhs, reflect(NZero.class)) && !equal(rhs, reflect(NZero.class))) )
+            {
+                // 1 +/- 0 or 0 +/- 1
+                return reflect(NZero.class);
+            }
+        }
+        return reflect(Top.class);
     }
 
     // ========================================================================
