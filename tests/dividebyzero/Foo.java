@@ -8,6 +8,41 @@ import org.checkerframework.checker.dividebyzero.qual.*;
 // but it is an important start. You should always write your own test cases,
 // in addition to using those provided to you.
 class Foo {
+    public static void operator_errors() {
+        int x = 1;
+        int y = 1;
+        int z = 1;
+        int t = 1; // test variable 
+        // :: error: divide.by.zero
+        t = z/(x - y);
+        // :: error: divide.by.zero
+        t = y/(z - x);
+        // :: error: divide.by.zero
+        t = x/(z - y);
+        // :: error: divide.by.zero
+        t = x/(2*z - y - x);
+        x *= 0;
+        y *= 0;
+        // :: error: divide.by.zero
+        t = z/(x + y);
+        t = y/(z + x);
+        t = x/(z + y);
+        // :: error: divide.by.zero
+        t = (x - z)/y;
+        t = (x - y)/z;
+        x *= 1;
+        y *= 1;
+        // we should still get the same errors
+        // :: error: divide.by.zero
+        t = z/(x + y);
+        t = y/(z + x);
+        t = x/(z + y);
+        // :: error: divide.by.zero
+        t = (x - z)/y;
+        t = (x - y)/z;
+        // :: error: divide.by.zero
+        t = (z - y)/x;
+    }
     public static void f() {
         int one  = 1;
         int zero = 0;
